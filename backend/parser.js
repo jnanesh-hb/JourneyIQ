@@ -147,61 +147,16 @@ const CITY_ALIASES = {
   'gwl': 'Guwahati',
   'shillong': 'Shillong',
   'imphal': 'Imphal',
-  // Telugu Script Aliases
-  'విశాఖపట్నం': 'Visakhapatnam',
-  'విశాఖపట్టణం': 'Visakhapatnam',
-  'వైజాగ్': 'Visakhapatnam',
-  'విజయవాడ': 'Vijayawada',
-  'హైదరాబాద్': 'Hyderabad',
-  'హైదరాబాదు': 'Hyderabad',
-  'సికింద్రాబాద్': 'Hyderabad',
-  'రాజమండ్రి': 'Rajahmundry',
-  'తిరుపతి': 'Tirupati',
-  'తిరుమల': 'Tirupati',
-  'చెన్నై': 'Chennai',
-  'మద్రాస్': 'Chennai',
-  'బెంగళూరు': 'Bengaluru',
-  'బెంగళూర్': 'Bengaluru',
-  'మంగళూరు': 'Mangaluru',
-  'మైసూర్': 'Mysuru',
-  'కొచ్చి': 'Kochi',
-  'ముంబై': 'Mumbai',
-  'పూణే': 'Pune',
-  'పుణె': 'Pune',
-  'ఢిల్లీ': 'Delhi',
-  'న్యూఢిల్లీ': 'Delhi',
-  'కోల్‌కతా': 'Kolkata',
-  'అహ్మదాబాద్': 'Ahmedabad',
-  'జైపూర్': 'Jaipur',
-  'లక్నో': 'Lucknow',
-  'వారణాసి': 'Varanasi',
-  'ఆగ్రా': 'Agra',
-  'భోపాల్': 'Bhopal',
-  'ఇండోర్': 'Indore',
-  'చండీగఢ్': 'Chandigarh',
-  'పాట్నా': 'Patna',
-  'రాంచీ': 'Ranchi',
-  'భువనేశ్వర్': 'Bhubaneswar',
-  'కటక్': 'Cuttack',
-  'గువాహటి': 'Guwahati',
-  'గోవా': 'Goa',
-  'సూరత్': 'Surat',
-  'నాగపూర్': 'Nagpur',
-  'కాకినాడ': 'Visakhapatnam',
-  'గుంటూరు': 'Vijayawada',
+  // Chhattisgarh
+  'raipur': 'Raipur',
+  // J&K
+  'srinagar': 'Srinagar',
 };
-
-function cleanTeluguToken(str) {
-  if (!str) return '';
-  return str.replace(/(?:నుండి|నుంచి|నుంచీ|నికి|నకు|కి|కు|వరకు|లో|చేరాలి|వెళ్లాలి|ప్రయాణం)+$/u, '').trim();
-}
 
 function normalizeCity(name) {
   if (!name || typeof name !== 'string') return null;
-  const raw = name.trim();
-  const cleaned = cleanTeluguToken(raw);
-  const lower = cleaned.toLowerCase();
-  return CITY_ALIASES[cleaned] || CITY_ALIASES[lower] || KNOWN_CITIES.find(c => c.toLowerCase() === lower) || null;
+  const lower = name.trim().toLowerCase();
+  return CITY_ALIASES[lower] || KNOWN_CITIES.find(c => c.toLowerCase() === lower) || null;
 }
 
 /**
@@ -245,53 +200,52 @@ function parseRequest(text) {
     raw: text,
   };
 
-  // Check Telugu From-To patterns (e.g. "విశాఖపట్నం నుండి విజయవాడకు")
-  const teluguMatch = text.match(/([^\s]+)\s*(?:నుండి|నుంచి|నుంచీ)\s*([^\s]+)/u);
-  if (teluguMatch) {
-    const normOrigin = normalizeCity(teluguMatch[1]);
-    const normDest = normalizeCity(teluguMatch[2]);
-    if (normOrigin) result.origin = normOrigin;
-    if (normDest) result.destination = normDest;
-  }
+  // Extract origin/destination using patterns like "from X to Y"
+  const fromToMatch = lower.match(/from\s+([a-z\s]+?)\s+to\s+([a-z\s]+?)(?:\s+on|\s+by|\s+before|\s+for|\s+with|\s+budget|\s+tomorrow|\s+today|$)/);
+  if (fromToMatch) {
+    result.origin = normalizeCity(fromToMatch[1].trim()) || fromToMatch[1].trim();
+    result.destination = normalizeCity(fromToMatch[2].trim()) || fromToMatch[2].trim();
+  } else {
+    // Scan text for known city names/aliases
+    const words = lower.split(/\s+/);
+    const foundCities = [];
 
-  // Extract origin/destination using standard English patterns like "from X to Y"
-  if (!result.origin || !result.destination) {
-    const fromToMatch = lower.match(/from\s+([a-z\s]+?)\s+to\s+([a-z\s]+?)(?:\s+on|\s+by|\s+before|\s+for|\s+with|\s+budget|\s+tomorrow|\s+today|$)/);
-    if (fromToMatch) {
-      result.origin = normalizeCity(fromToMatch[1].trim()) || fromToMatch[1].trim();
-      result.destination = normalizeCity(fromToMatch[2].trim()) || fromToMatch[2].trim();
-    } else {
-      // Scan text for known city names/aliases (including Telugu script)
-      const tokens = text.split(/\s+/);
-      const foundCities = [];
-      
-      for (const tok of tokens) {
-        const norm = normalizeCity(tok);
-        if (norm && !foundCities.includes(norm)) {
-          foundCities.push(norm);
-        }
+    // Check multi-word aliases (e.g. "new delhi")
+    if (lower.includes('new delhi')) foundCities.push('Delhi');
+
+    for (const w of words) {
+      const cleanW = w.replace(/[^a-z]/g, '');
+      const norm = normalizeCity(cleanW);
+      if (norm && !foundCities.includes(norm)) {
+        foundCities.push(norm);
       }
+    }
 
-      if (foundCities.length >= 2) {
-        if (!result.origin) result.origin = foundCities[0];
-        if (!result.destination) result.destination = foundCities[1];
-      } else if (foundCities.length === 1) {
-        if (!result.origin && !result.destination) {
-          if (lower.includes('from') || text.includes('నుండి') || text.includes('నుంచి')) {
-            result.origin = foundCities[0];
-          } else {
-            result.destination = foundCities[0];
-          }
-        }
+    if (foundCities.length >= 2) {
+      const firstCityIdx = lower.indexOf(foundCities[0].toLowerCase());
+      const secondCityIdx = lower.indexOf(foundCities[1].toLowerCase());
+      if (firstCityIdx < secondCityIdx) {
+        result.origin = foundCities[0];
+        result.destination = foundCities[1];
+      } else {
+        result.origin = foundCities[1];
+        result.destination = foundCities[0];
+      }
+    } else if (foundCities.length === 1) {
+      const cityLower = foundCities[0].toLowerCase();
+      if (lower.includes(`from ${cityLower}`)) {
+        result.origin = foundCities[0];
+      } else if (lower.includes(`to ${cityLower}`) || lower.includes(`go to ${cityLower}`) || lower.includes(`visit ${cityLower}`)) {
+        result.destination = foundCities[0];
       }
     }
   }
 
-  // Extract date: ISO, text months, or relative ("tomorrow", "today", "రేపు", "ఈరోజు")
+  // Extract date: ISO, text months, or relative ("tomorrow", "today")
   const isoDateMatch = text.match(/\b(\d{4}-\d{2}-\d{2})\b/);
   if (isoDateMatch) {
     result.date = isoDateMatch[1] + 'T00:00:00';
-  } else if (lower.includes('tomorrow') || lower.includes('today') || text.includes('రేపు') || text.includes('ఈరోజు')) {
+  } else if (lower.includes('tomorrow') || lower.includes('today')) {
     // Demo schedule dataset standard date is 2026-10-15
     result.date = '2026-10-15T00:00:00';
   } else {
@@ -323,12 +277,10 @@ function parseRequest(text) {
     result.passengers = parseInt(passengerMatch[1], 10);
   }
 
-  // Extract budget: supports English & Telugu ("budget is ₹1,500", "బడ్జెట్ ₹1500", "1500 రూపాయలు", "రూ 1500")
-  const budgetMatch = text.match(/(?:budget\s*(?:is|of|=|:)?|బడ్జెట్\s*(?:is|of|=|:)?|within|under|max|maximum|₹|Rs\.?|INR|రూ\.?)\s*([0-9,]+)/iu) ||
-                      text.match(/([0-9,]+)\s*(?:రూపాయలు|రూ\.?|rupees)/iu);
+  // Extract budget: supports "budget is ₹1,500", "budget ₹1500", "under 1500", "make my budget ₹1,500"
+  const budgetMatch = text.match(/(?:budget\s*(?:is|of|=|:)?|within|under|max|maximum|₹|Rs\.?|INR)\s*([0-9,]+)/i);
   if (budgetMatch) {
-    const val = budgetMatch[1] || budgetMatch[2];
-    if (val) result.budget = parseInt(val.replace(/,/g, ''), 10);
+    result.budget = parseInt(budgetMatch[1].replace(/,/g, ''), 10);
   }
 
   // Extract arrival deadline: supports "arrive before 7 PM", "before 7 PM", "by 19:00", "arrive by 7 PM"

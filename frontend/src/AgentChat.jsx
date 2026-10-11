@@ -115,7 +115,6 @@ export function AgentChat({
 
   const quickPrompts = [
     'I need to travel from Visakhapatnam to Vijayawada tomorrow. My budget is ₹1,500, I need to arrive before 7 PM, and I prefer fewer transfers.',
-    'నాకు విశాఖపట్నం నుండి విజయవాడకు ప్రయాణం చేయాలి. బడ్జెట్ ₹1,500.',
     'Compare candidate routes',
     'Simulate delay on TN-203 by 30 minutes',
     'Recover remaining journey after disruption',
@@ -405,7 +404,7 @@ export function AgentChat({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask JourneyIQ agent (e.g. 'I need to travel from Visakhapatnam to Vijayawada tomorrow budget ₹1,500' or 'నాకు విశాఖపట్నం నుండి విజయవాడకు ప్రయాణం చేయాలి')..."
+          placeholder="Ask JourneyIQ agent (e.g. 'I need to travel from Visakhapatnam to Vijayawada tomorrow budget ₹1,500')..."
           rows={2}
           disabled={loading}
         />

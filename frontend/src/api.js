@@ -92,24 +92,24 @@ export const api = {
     call('POST', '/disrupt', { service_id, type, delay_minutes, ...extra }),
 
   applyDisruption: (params) =>
-    call('POST', '/api/disruptions/apply', params),
+    call('POST', '/disruptions/apply', params),
 
   clearDisruption: (service_id) => call('DELETE', `/disrupt/${service_id}`),
-  resolveDisruption: (event_id) => call('DELETE', `/api/disruptions/${event_id}`),
+  resolveDisruption: (event_id) => call('DELETE', `/disruptions/${event_id}`),
   clearAllDisruptions: () => call('DELETE', '/disrupt'),
-  resetDisruptions: () => call('POST', '/api/disruptions/reset'),
+  resetDisruptions: () => call('POST', '/disruptions/reset'),
 
   checkDisruption: (itinerary) => call('POST', '/check-disruption', { itinerary }),
-  evaluateDisruption: (itinerary) => call('POST', '/api/disruptions/evaluate', { itinerary }),
+  evaluateDisruption: (itinerary) => call('POST', '/disruptions/evaluate', { itinerary }),
 
   confirm: (itinerary_id, itinerary, passengers) =>
     call('POST', '/confirm', { itinerary_id, itinerary, passengers }),
 
   approveRecovery: (itinerary, trip_id = 'default-trip', passengers = 1) =>
-    call('POST', '/api/disruptions/approve', { itinerary, trip_id, passengers }),
+    call('POST', '/disruptions/approve', { itinerary, trip_id, passengers }),
 
   keepCurrentPlan: (trip_id = 'default-trip') =>
-    call('POST', '/api/disruptions/keep-current', { trip_id }),
+    call('POST', '/disruptions/keep-current', { trip_id }),
 
   agentChat: (session_id, message) =>
     call('POST', '/agent/chat', { session_id, message }),
@@ -118,17 +118,17 @@ export const api = {
     call('GET', `/agent/session/${session_id}`),
 
   tripStatus: (trip_id = 'default-trip') =>
-    call('GET', `/api/trips/${trip_id}/status`),
+    call('GET', `/trips/${trip_id}/status`),
 
   tripHistory: (trip_id = 'default-trip') =>
-    call('GET', `/api/trips/${trip_id}/history`),
+    call('GET', `/trips/${trip_id}/history`),
 
   tripReset: (trip_id = 'default-trip') =>
-    call('POST', `/api/trips/${trip_id}/reset`),
+    call('POST', `/trips/${trip_id}/reset`),
 
   compareItineraries: (options) =>
-    call('POST', '/api/itineraries/compare', { options }),
+    call('POST', '/itineraries/compare', { options }),
 
   recoverJourney: (params) =>
-    call('POST', '/api/journeys/recover', params),
+    call('POST', '/journeys/recover', params),
 };
